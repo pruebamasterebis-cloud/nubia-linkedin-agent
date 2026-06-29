@@ -1,0 +1,1109 @@
+{
+  "name": "Noticias linkedin",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1344,
+        240
+      ],
+      "id": "44b1eb0d-d24e-4533-bdb2-a5ac09f5ac11",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://hipertextual.com/feed",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -976,
+        160
+      ],
+      "id": "98eb2195-17c9-4886-a0d9-72e4ec06c4bb",
+      "name": "hipertextual ESP",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.xataka.com/feedburner.xml",
+        "options": {
+          "customFields": ""
+        }
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -976,
+        320
+      ],
+      "id": "e311a90b-b622-4c4d-8105-14ec6a36bb75",
+      "name": "Xakata ESP",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.genbeta.com/feedburner.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -976,
+        480
+      ],
+      "id": "0a619fa8-015e-49f3-94ce-9749e6eef38e",
+      "name": "Genbeta ESP",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        160
+      ],
+      "id": "41248b02-91e8-4679-942b-3bbd06a5da53",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        480
+      ],
+      "id": "0f5c95ff-e293-42f5-aafa-eaedfb739505",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        320
+      ],
+      "id": "5c60c85f-fc0c-4b70-9c8b-f39bee7cc871",
+      "name": "Limit2"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -336,
+        272
+      ],
+      "id": "f00c4c33-463f-4ef6-9126-c3bc5488fccb",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let noticias = \"\";\nlet i = 1;\n\nfor (const item of $input.all()) {\n  const descripcion = (item.json.contentSnippet || \"\").substring(0, 300);\n  \n  noticias += `Noticia ${i}:\\n`;\n  noticias += `Título: ${item.json.title}\\n`;\n  noticias += `Descripción: ${descripcion}...\\n`;\n  noticias += `Fecha: ${item.json.pubDate}\\n`;\n  noticias += `Link: ${item.json.link}\\n`;\n  noticias += `---\\n`;\n  i++;\n}\n\nreturn [{ json: { noticias_formateadas: noticias } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        304
+      ],
+      "id": "33a3140f-edb0-4370-ad1a-7edf7c7d1434",
+      "name": "Formatear noticias"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres el agente de contenidos de Nubia, una empresa especializada en \nautomatización e implementación de IA para pequeñas y medianas empresas (pymes).\n\nTu función es transformar noticias de actualidad sobre tecnología, IA y \nnegocios en posts para LinkedIn, adaptados a la voz y misión de Nubia.\n\n---\n\n## SOBRE NUBIA\n\nNubia ayuda a los dueños de pymes a entender, adoptar e implementar la \ninteligencia artificial y la automatización en sus negocios, de forma \npráctica y sin tecnicismos.\n\n---\n## VERIFICACIÓN DE DUPLICADOS (OBLIGATORIO)\nAntes de seleccionar cualquier noticia, DEBES llamar a la herramienta \n\"Revision noticias duplicadas\" para consultar las noticias ya publicadas.\n\nCompara temáticamente (no literalmente) cada candidata con los registros \nobtenidos (columnas tema_principal, keywords y resumen_post). Descarta \ncualquier noticia cuyo tema principal ya haya sido cubierto en los \núltimos 30 días.\n\nSi todas las noticias disponibles ya fueron cubiertas, selecciona igualmente \nla más relevante e indica al inicio del post: [REVISAR - tema similar publicado anteriormente]\n\nEste paso es obligatorio y debe ejecutarse antes de redactar el post final.\n\n## SELECCIÓN DE NOTICIAS\nRecibirás un listado de titulares y descripciones de múltiples fuentes.\n\nAntes de redactar nada, evalúa cada noticia y selecciona UNA sola \naplicando estos criterios por orden de prioridad:\n\n1. RELEVANCIA PARA PYMES: ¿Tiene impacto directo o aplicación práctica \n   para un pequeño o mediano negocio?\n2. NOVEDAD: Prioriza noticias recientes sobre tendencias o cambios de \n   comportamiento, no meras actualizaciones de producto\n3. APLICABILIDAD: ¿Se puede conectar con una situación cotidiana \n   de una pyme sin forzar el argumento?\n4. EVITA: noticias de política tecnológica, fusiones corporativas \n   sin impacto claro en pymes, o actualizaciones técnicas muy nicho\n\nUna vez seleccionada, procede directamente con la redacción del post.\n\n## AUDIENCIA\n\nEl lector ideal es un dueño o gerente de una pyme:\n- Sin perfil técnico profundo\n- Con poco tiempo\n- Que quiere modernizar su negocio pero no sabe por dónde empezar\n- Que desconfía de las soluciones tecnológicas complejas\n\n---\n\n## OBJETIVO DE CADA POST\n\nCada post debe conseguir que el lector piense:\n\"Nubia entiende mis problemas. Puedo confiar en ellos.\"\n\nPara ello, conecta siempre la noticia con una situación real y cotidiana \ndel mundo de las pymes.\n\n---\n\n## TONO DE COMUNICACIÓN\n\n- Cercano y humano: habla como un asesor de confianza, no como una corporación\n- Divulgativo: explica cualquier concepto técnico en lenguaje sencillo\n- Positivo y constructivo: mensaje de oportunidad, nunca de miedo o alarma\n- Directo: frases cortas, fácil de leer en móvil\n\n---\n\n## ESTRUCTURA DEL POST (obligatoria)\n\n1. GANCHO (1-2 líneas): primera línea impactante (pregunta, dato sorprendente \n   o afirmación que genere curiosidad).\n2. DESARROLLO (2-3 líneas máximo): una sola idea central de la noticia, \n   explicada en lenguaje sencillo. Sé brutalmente conciso. Elige el dato \n   o ángulo más relevante para una pyme y descarta el resto.\n3. CTA (1-2 líneas): invita a reflexionar o dar un primer paso y menciona a \n   Nubia de forma natural.\n\n---\n## PROMPT DE IMAGEN (obligatorio)\n\nAdemás del post, debes redactar el prompt completo para generar una imagen \nque ilustre la noticia seleccionada. Ese prompt describe una ilustración \ndigital plana (flat design), con colores corporativos azul y blanco, sin \nningún texto ni letras en la imagen, composición limpia tipo infografía \nconceptual, adecuada para un post de negocios en LinkedIn. Describe también \nlos elementos visuales concretos de esta noticia en particular (objetos, \nescena o metáfora visual). No incluyas logos ni marcas reales. Escribe el \nprompt en español.\n\n## REGLAS ESTRICTAS\n\nSIEMPRE: escribe en español, foco en el impacto para pymes, fiel a la \nnoticia real, explica el lenguaje técnico, termina con el CTA de Nubia.\n\nNUNCA: política ni temas divisivos, opiniones personales, tecnicismos sin \nexplicar, alarmismo, afirmaciones no respaldadas por la noticia, dañar la \nimagen de Nubia, mencionar competidores, copiar literalmente la noticia, \nsuperar 120 palabras en el post. Si el borrador es más largo, recórtalo \nantes de devolver el JSON.\n\n---\n## FORMATO DE SALIDA (MUY IMPORTANTE)\nDevuelve UNICAMENTE un objeto JSON valido, sin marcas de codigo, sin texto \nantes ni despues, con esta estructura EXACTA:\n\n{\n  \"post\": \"Texto completo del post listo para publicar en LinkedIn (80-120 palabras máximo, con saltos de linea reales). El post debe terminar siempre con 3-5 hashtags relevantes en español. Ejemplo: #InteligenciaArtificial #Automatización #Pymes\",\n  \"titular_fuente\": \"Titular original de la noticia elegida\",\n  \"tema_principal\": \"Tema central en 3-6 palabras (ej: IA en atencion al cliente)\",\n  \"keywords\": \"4-6 palabras clave separadas por comas\",\n  \"fuente_rss\": \"Nombre del medio del que procede la noticia\",\n  \"prompt_imagen\": \"Prompt completo en español para generar la imagen ilustrativa, siguiendo el estilo flat design azul y blanco sin texto, describiendo los elementos visuales concretos de esta noticia\"\n}\n\nEl campo \"post\" es lo unico que se publicara. El resto se usa para registrar \ny evitar duplicados. No incluyas nada fuera del JSON.\n\n## NOTICIAS DISPONIBLES PARA EVALUAR\n\n{{ $json.noticias_formateadas }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        304
+      ],
+      "id": "1fa8eb31-c78d-4cfa-8fe2-63cee17718f6",
+      "name": "AI Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -64,
+        512
+      ],
+      "id": "5eb4875c-51c8-4246-8a09-28fb492e31e1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "L9gKPlqnjyOWYQNU",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1WE5uCJAh-dUt-NnVpLCWGXxRl-AQnLMJGkJKtPNLI5s",
+          "mode": "list",
+          "cachedResultName": "nubia_posts_publicados  ueno",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WE5uCJAh-dUt-NnVpLCWGXxRl-AQnLMJGkJKtPNLI5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 637402688,
+          "mode": "list",
+          "cachedResultName": "posts_publicados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WE5uCJAh-dUt-NnVpLCWGXxRl-AQnLMJGkJKtPNLI5s/edit#gid=637402688"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        528
+      ],
+      "id": "4e373688-b775-44cc-9009-b08f2e9a8893",
+      "name": "Revision noticias duplicadas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CUVTqfMaDyOA744W",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-image-2-2026-04-21",
+          "mode": "list",
+          "cachedResultName": "GPT-IMAGE-2-2026-04-21"
+        },
+        "prompt": "={{ $('Parsear salida').item.json.prompt_imagen }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        80
+      ],
+      "id": "eb3c061e-2e4f-4b51-98a0-309edd9e8f36",
+      "name": "crea imagen",
+      "credentials": {
+        "openAiApi": {
+          "id": "L9gKPlqnjyOWYQNU",
+          "name": "OpenAI account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "780017674",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=={{ $('Parsear salida').item.json.post.substring(0, 900) + '...' }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        -64
+      ],
+      "id": "e87e60e7-cb67-45d4-911a-c6cf32b43f65",
+      "name": "Send a photo message",
+      "webhookId": "608ce5b9-8c2f-4e1a-8df2-c9acee721351",
+      "credentials": {
+        "telegramApi": {
+          "id": "gqjIPSCgE4eIW3xO",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "780017674",
+        "message": "=¿Publicar este post en LinkedIn?\n\n{{ $('Parsear salida').item.json.post }}",
+        "approvalOptions": {
+          "values": {
+            "approveLabel": "Publicar"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        -64
+      ],
+      "id": "32d135c2-cac4-4f3e-becd-4e17b09779c2",
+      "name": "Send message and wait for response",
+      "webhookId": "608ce5b9-8c2f-4e1a-8df2-c9acee721351",
+      "credentials": {
+        "telegramApi": {
+          "id": "gqjIPSCgE4eIW3xO",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "ChTPT5RwhM",
+        "text": "={{ $('Parsear salida').item.json.post }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        224
+      ],
+      "id": "bf7197cd-e4b6-4640-a221-9c25d8f0ad11",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "IAwLZBFXhP0xb3DR",
+          "name": "LinkedIn account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parsea la salida JSON del agente y la deja lista para el resto del flujo.\nlet raw = ($json.output || '').toString().trim();\nraw = raw.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();\n\nlet parsed;\nlet parseOk = true;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parseOk = false;\n  parsed = {\n    post: $json.output,\n    titular_fuente: '',\n    tema_principal: 'general',\n    keywords: '',\n    fuente_rss: '',\n    prompt_imagen: 'Ilustración digital plana sobre tecnología e inteligencia artificial para pymes, flat design, colores azul y blanco, sin texto, composición limpia tipo infografía conceptual'\n  };\n}\n\n// Fallback por si el agente devuelve JSON válido pero omite prompt_imagen\nif (!parsed.prompt_imagen) {\n  parsed.prompt_imagen = `Ilustración digital plana sobre ${parsed.tema_principal || 'tecnología e IA'}, flat design, colores azul y blanco, sin texto, composición limpia tipo infografía conceptual`;\n}\n\n// Validación de calidad: el post debe existir y tener cuerpo real\nconst postTexto = (parsed.post || '').toString().trim();\nconst postValido = parseOk && postTexto.length >= 80;\n\nparsed._valido = postValido;\nparsed._motivo = postValido ? '' : (parseOk ? 'post demasiado corto o vacío' : 'JSON inválido del agente');\n\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        160
+      ],
+      "id": "54ac820f-987b-41f4-84d4-dafe30c8476e",
+      "name": "Parsear salida"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2723cc19-3aa9-4bb0-b4ec-144d44027604",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        -64
+      ],
+      "id": "97f95d89-eef0-4778-898b-c6fe3f061f3f",
+      "name": "¿Aprobado?"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1488,
+        16
+      ],
+      "id": "120ce24b-46bf-41c4-8e14-4b2d3ff51154",
+      "name": "Reunir imagen y aprobacion"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1WE5uCJAh-dUt-NnVpLCWGXxRl-AQnLMJGkJKtPNLI5s",
+          "mode": "list",
+          "cachedResultName": "nubia_posts_publicados ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WE5uCJAh-dUt-NnVpLCWGXxRl-AQnLMJGkJKtPNLI5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 637402688,
+          "mode": "list",
+          "cachedResultName": "posts_publicados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WE5uCJAh-dUt-NnVpLCWGXxRl-AQnLMJGkJKtPNLI5s/edit#gid=637402688"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "titular_fuente": "={{ $('Parsear salida').item.json.titular_fuente }}",
+            "tema_principal": "={{ $('Parsear salida').item.json.tema_principal }}",
+            "keywords": "={{ $('Parsear salida').item.json.keywords }}",
+            "resumen_post": "={{ $('Parsear salida').item.json.post.substring(0, 500) }}",
+            "fuente_rss": "={{ $('Parsear salida').item.json.fuente_rss }}",
+            "url_linkedin": "={{ $json.urn ? 'https://www.linkedin.com/feed/update/' + $json.urn : '' }}",
+            "fecha_publicacion": "={{ (() => {\n  const str = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Andorra' });\n  const [fecha, hora] = str.split(', ');\n  const [dia, mes, anio] = fecha.split('/');\n  const [h, m] = hora.split(':');\n  return `${dia.padStart(2,'0')}/${mes.padStart(2,'0')}/${anio} ${h.padStart(2,'0')}:${m.padStart(2,'0')}`;\n})() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "fecha_publicacion",
+              "displayName": "fecha_publicacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "titular_fuente",
+              "displayName": "titular_fuente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tema_principal",
+              "displayName": "tema_principal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "keywords",
+              "displayName": "keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resumen_post",
+              "displayName": "resumen_post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fuente_rss",
+              "displayName": "fuente_rss",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url_linkedin",
+              "displayName": "url_linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1952,
+        208
+      ],
+      "id": "d064d5b4-523b-496c-9905-c9b97a44b478",
+      "name": "Registrar publicacion",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CUVTqfMaDyOA744W",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "780017674",
+        "text": "=Post publicado en LinkedIn correctamente.\n\nTema: {{ $('Parsear salida').item.json.tema_principal }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2224,
+        208
+      ],
+      "id": "19790606-67f3-4e67-a234-cb32b4d7f2b2",
+      "name": "Notificar publicado",
+      "webhookId": "111b5b20-3ecc-46a3-b94c-3c6bcff4b0d4",
+      "credentials": {
+        "telegramApi": {
+          "id": "gqjIPSCgE4eIW3xO",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "780017674",
+        "text": "=⚠️ Error en el flujo de Nubia.\n\nMotivo: {{ $json._motivo || $json.error?.message || 'Fallo en un nodo del flujo. Revisa la ejecución en n8n.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1648,
+        528
+      ],
+      "id": "5a3ffb05-e377-4e10-b355-97807b333f3c",
+      "name": "Notificar error",
+      "webhookId": "7e7919d3-4cd4-45b9-ae59-dccdf3c03430",
+      "credentials": {
+        "telegramApi": {
+          "id": "gqjIPSCgE4eIW3xO",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 1. DISPARADOR + FUENTES\nSchedule Trigger lanza el flujo periodicamente. Lee 4 feeds RSS (Hipertextual, Xataka, Genbeta, The verge en ingles el cual el modulo de open AI lo traduze al español) y limita cada uno a 5 noticias excepto el RSS que entra en ingles que solo deja pasar 1 para no tener que traducir 5 que puede que ni se utilizen para no saturar al agente.",
+        "height": 208,
+        "width": 364,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -96
+      ],
+      "id": "39672793-f2b6-4be5-b880-c3b2f30e7565",
+      "name": "Sticky 816576"
+    },
+    {
+      "parameters": {
+        "content": "## 2. PREPARAR Y CURAR\nMerge1 une las 4 fuentes. 'Formatear noticias' convierte los items RSS en un texto unico legible para el agente.",
+        "height": 168,
+        "width": 280,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        32
+      ],
+      "id": "e370f77f-d360-4676-86a7-8e610057a0e2",
+      "name": "Sticky 461c41"
+    },
+    {
+      "parameters": {
+        "content": "## 3. AGENTE NUBIA (IA)\nEl AI Agent selecciona UNA noticia, comprueba duplicados en Google Sheets (tool de lectura) y redacta el post en JSON. 'Parsear salida' convierte ese JSON en campos usables (post, tema, keywords...), tambien redacta el promp image para el siguiente nodo de creacion de imagen ",
+        "height": 200,
+        "width": 304,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "585c1039-c592-41ca-83e2-0b2c16099b76",
+      "name": "Sticky a356b3"
+    },
+    {
+      "parameters": {
+        "content": "## 4. IMAGEN\n'crea imagen' (GPT-IMAGE) genera la ilustracion del post como binario 'data', basada en el tema, el Nodo IF es por si falla algo no gaste tokens creando una imagen defectuosa.",
+        "height": 198,
+        "width": 216,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "6785c82d-d638-43ff-a34f-a40a4e62d7f7",
+      "name": "Sticky 670915"
+    },
+    {
+      "parameters": {
+        "content": "## 5. APROBACION HUMANA (Telegram)\n\nSe envia la foto + el texto con botones inline. \n'Send message and wait' PAUSA la ejecucion hasta que el revisor decide.\nEl IF comprueba $json.data.approved para enrutar hacia publicar o descartar.\nSi el post empieza con [REVISAR - tema similar publicado anteriormente],\nsignifica que el agente no encontró noticias sin duplicar y ha seleccionado\nla más relevante igualmente. Revisa si el tema ya fue publicado antes de aprobar.",
+        "height": 304,
+        "width": 448,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -400
+      ],
+      "id": "af98fd32-9182-4505-ac13-02cbc9c7b0a9",
+      "name": "Sticky d4280a"
+    },
+    {
+      "parameters": {
+        "content": "## 6. PUBLICAR + REGISTRAR\nSi apruebas: Merge re-adjunta el binario de la imagen (se pierde al pausar) y LinkedIn publica texto+imagen. Luego se registra la publicacion en Google Sheets para la deduplicacion futura.",
+        "height": 180,
+        "width": 388,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        0
+      ],
+      "id": "f5547dfa-59d4-45a9-b1e8-7dada8631c1f",
+      "name": "Sticky 5c1091"
+    },
+    {
+      "parameters": {
+        "content": "## GESTION DE ERRORES\nAI Agent, crea imagen y LinkedIn tienen salida de error (rojo) que avisa por Telegram sin romper el flujo. Los RSS toleran que un feed caiga (continueRegularOutput).",
+        "height": 140,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        720
+      ],
+      "id": "15bc596c-8975-4d91-a087-d8dd3067852d",
+      "name": "Sticky 42decc"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        656
+      ],
+      "id": "ee44bb19-8977-4441-9cb0-87131aa846cb",
+      "name": "Limit3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1344,
+        432
+      ],
+      "id": "c7360fe5-8d27-444d-8ca3-fe84b271f72f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6ad8bb92-14aa-4b76-8a13-a22d1f9444d5",
+              "leftValue": "={{ $json._valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        464,
+        160
+      ],
+      "id": "6e666f8e-719f-45e1-872b-222d18a19a53",
+      "name": "comprovacion json"
+    },
+    {
+      "parameters": {
+        "path": "12354862-779a-4453-b334-63ff1bde1234",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1344,
+        624
+      ],
+      "id": "273f26c0-ccbb-4675-8174-0e27cb68514e",
+      "name": "Webhook",
+      "webhookId": "12354862-779a-4453-b334-63ff1bde1234"
+    },
+    {
+      "parameters": {
+        "url": "https://www.muypymes.com/feed",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -976,
+        656
+      ],
+      "id": "18ca7f90-6536-45b9-a438-5f73df4e3e5e",
+      "name": "Muypymes",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "hipertextual ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Xakata ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Genbeta ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Muypymes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hipertextual ESP": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Xakata ESP": {
+      "main": [
+        [
+          {
+            "node": "Limit2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Genbeta ESP": {
+      "main": [
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Formatear noticias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear noticias": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revision noticias duplicadas": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parsear salida",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificar error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear salida": {
+      "main": [
+        [
+          {
+            "node": "comprovacion json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crea imagen": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reunir imagen y aprobacion",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Notificar error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "¿Aprobado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Aprobado?": {
+      "main": [
+        [
+          {
+            "node": "Reunir imagen y aprobacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificar error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reunir imagen y aprobacion": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Registrar publicacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificar error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar publicacion": {
+      "main": [
+        [
+          {
+            "node": "Notificar publicado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "hipertextual ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Xakata ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Genbeta ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Muypymes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "comprovacion json": {
+      "main": [
+        [
+          {
+            "node": "crea imagen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificar error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Muypymes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Genbeta ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Xakata ESP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "hipertextual ESP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Muypymes": {
+      "main": [
+        [
+          {
+            "node": "Limit3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5beb5c35-e7d9-4796-a521-0dacce95ef92",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9674d0dbc6d72d1d771c2f1a3569bcb1973c53e4e6cf88fc56c6e4586343f790"
+  },
+  "id": "N4DZKKWrznDc2uhF",
+  "tags": []
+}
